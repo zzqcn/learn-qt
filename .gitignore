@@ -7,6 +7,7 @@ build/
 *.tar
 *.tar.gz
 *.tgz
+.DS_Store
 
 # Prerequisites
 *.d
@@ -98,6 +99,9 @@ target_wrapper.*
 
 # QtCreator CMake
 CMakeLists.txt.user*
+
+# QtCreator Meson
+meson.build.user*
 
 # QtCreator 4.8< compilation database
 compile_commands.json
