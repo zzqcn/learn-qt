@@ -5,6 +5,11 @@ project('HelloWorld', 'cpp', default_options : ['cpp_std=c++17'])
 qt6 = import('qt6')
 qt6dep = dependency('qt6', modules: ['Core', 'Widgets'])
 
+rpath = ''
+if host_machine.system() == 'darwin'
+    rpath = '/usr/local/Qt-6.2.4/lib'
+endif
+
 generated_files = qt6.preprocess(
     moc_headers : 'MainWindow.h',
     ui_files : 'MainWindow.ui',
@@ -15,6 +20,6 @@ executable('HelloWorld',
     'MainWindow.cpp',
     generated_files,
     dependencies : [qt6dep],
-    build_rpath : '/usr/local/Qt-6.2.4/lib',
+    build_rpath : rpath,
     install : true
 )
