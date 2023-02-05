@@ -36,7 +36,7 @@ public:
 
   void clear();
   void setPacket(Packet *pkt);
-  void setRange(int begin, int end);
+  void setRange(size_t pos, size_t length);
 
 signals:
 

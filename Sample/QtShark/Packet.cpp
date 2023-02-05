@@ -73,9 +73,9 @@ int dissectPacket(const uint8_t *data, size_t dataLen, Packet *pkt,
   field = new ProtoField;
   field->key = "L2";
   field->value = "Ethernet";
-  field->beginOff = off;
-  field->endOff = off + 13;
-  child = new ProtoTree(field);
+  field->pos = off;
+  field->length = 14;
+  child = new ProtoTree(field, tree);
   tree->addChild(child);
   off += 14;
 
@@ -83,26 +83,26 @@ int dissectPacket(const uint8_t *data, size_t dataLen, Packet *pkt,
   field = new ProtoField;
   field->key = "L3";
   field->value = "IPv4";
-  field->beginOff = off;
-  field->endOff = off + 20;
-  child = new ProtoTree(field);
+  field->pos = off;
+  field->length = 20;
+  child = new ProtoTree(field, tree);
   // source ip
   pkt->srcIP = *(uint32_t *)(data + off + 12);
   field = new ProtoField;
   field->key = "srcIP";
   field->value = ip_to_string(pkt->srcIP);
-  field->beginOff = off + 12;
-  field->endOff = off + 15;
-  child2 = new ProtoTree(field);
+  field->pos = off + 12;
+  field->length = 4;
+  child2 = new ProtoTree(field, child);
   child->addChild(child2);
   // destination ip
   pkt->dstIP = *(uint32_t *)(data + off + 16);
   field = new ProtoField;
   field->key = "srcIP";
   field->value = ip_to_string(pkt->dstIP);
-  field->beginOff = off + 16;
-  field->endOff = off + 19;
-  child2 = new ProtoTree(field);
+  field->pos = off + 16;
+  field->length = 4;
+  child2 = new ProtoTree(field, child);
   child->addChild(child2);
   tree->addChild(child);
   pkt->proto = *(data + off + 9);
@@ -112,26 +112,26 @@ int dissectPacket(const uint8_t *data, size_t dataLen, Packet *pkt,
   field = new ProtoField;
   field->key = "L4";
   field->value = proto_to_string(pkt->proto);
-  field->beginOff = off;
-  field->endOff = off + 20;
-  child = new ProtoTree(field);
+  field->pos = off;
+  field->length = 20;
+  child = new ProtoTree(field, tree);
   // source port
   pkt->srcPort = *(uint16_t *)(data + off);
   field = new ProtoField;
   field->key = "srcPort";
   field->value = port_to_string(pkt->srcPort);
-  field->beginOff = off;
-  field->endOff = off + 1;
-  child2 = new ProtoTree(field);
+  field->pos = off;
+  field->length = 2;
+  child2 = new ProtoTree(field, child);
   child->addChild(child2);
   // destination port
   pkt->dstPort = *(uint16_t *)(data + off + 2);
   field = new ProtoField;
   field->key = "dstPort";
   field->value = port_to_string(pkt->dstPort);
-  field->beginOff = off + 2;
-  field->endOff = off + 3;
-  child2 = new ProtoTree(field);
+  field->pos = off + 2;
+  field->length = 2;
+  child2 = new ProtoTree(field, child);
   child->addChild(child2);
   // tcp flags
   uint16_t flags = *(uint16_t *)(data + off + 12);

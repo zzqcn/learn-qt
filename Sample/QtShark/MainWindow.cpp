@@ -42,11 +42,10 @@ RawData g_rawData[3] = {
 Packet *g_pkts[3];
 ProtoTree *g_protoTrees[3];
 
-void generatePacketModel(QStandardItemModel *model) {
+void generatePacketListModel(PacketListModel *model) {
   int ret = 0;
   Packet *pkt;
   ProtoTree *tree;
-  QStandardItem *item;
   unsigned i;
 
   for (i = 0; i < 3; i++) {
@@ -62,56 +61,8 @@ void generatePacketModel(QStandardItemModel *model) {
 
     g_pkts[i] = pkt;
     g_protoTrees[i] = tree;
-
-    QList<QStandardItem *> items;
-    item = new QStandardItem(QString("%1").arg(pkt->index + 1));
-    items.append(item);
-    item = new QStandardItem(ip_to_string(pkt->srcIP).c_str());
-    items.append(item);
-    item = new QStandardItem(ip_to_string(pkt->dstIP).c_str());
-    items.append(item);
-    item = new QStandardItem(port_to_string(pkt->srcPort).c_str());
-    items.append(item);
-    item = new QStandardItem(port_to_string(pkt->dstPort).c_str());
-    items.append(item);
-    item = new QStandardItem(proto_to_string(pkt->proto).c_str());
-    items.append(item);
-    item = new QStandardItem(QString("%1").arg(pkt->dataLen));
-    items.append(item);
-    item = new QStandardItem(pkt->info.c_str());
-    items.append(item);
-    model->appendRow(items);
+    model->addPacket(pkt);
   }
-}
-
-void ProtoTreeToItem(ProtoTree *tree, QStandardItem *parent) {
-  QStandardItem *item;
-  ProtoField *field = tree->field;
-
-  if (tree->field != nullptr) {
-    item = new QStandardItem(
-        QString("%1 : %2").arg(field->key.c_str(), field->value.c_str()));
-    QSize sz(tree->field->beginOff, tree->field->endOff);
-    item->setData(sz);
-  } else {
-    item = new QStandardItem("Unknown");
-    item->setData(QSize(-1, -1));
-  }
-
-  for (size_t i = 0; i < tree->childs.size(); i++) {
-    ProtoTreeToItem(tree->childs[i], item);
-  }
-
-  parent->appendRow(item);
-}
-
-QStandardItemModel *MainWindow::generateProtoTreeModel(const Packet *pkt) {
-  ProtoTree *root = g_protoTrees[pkt->index];
-  QStandardItemModel *model = new QStandardItemModel;
-
-  ProtoTreeToItem(root, model->invisibleRootItem());
-
-  return model;
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -121,40 +72,30 @@ MainWindow::MainWindow(QWidget *parent)
   this->setWindowTitle("QtShark");
 
   // underlying data model
-  QStringList headers;
-  headers << "No."
-          << "SrcIP"
-          << "DstIP"
-          << "SrcPort"
-          << "DstPort"
-          << "Protocol"
-          << "Length"
-          << "Info";
-  QStandardItemModel *pktModel = new QStandardItemModel;
-  pktModel->setHorizontalHeaderLabels(headers);
-  // dissect raw data to generate packet list model and proto trees
-  generatePacketModel(pktModel);
+  pktListModel = new PacketListModel;
+  generatePacketListModel(pktListModel);
+  protoTreeModel = new ProtoTreeModel;
 
   // packet list view
   ui->pktList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  ui->pktList->setModel(pktModel);
+  ui->pktList->setItemsExpandable(false);
+  ui->pktList->setRootIsDecorated(false);
+  //  ui->pktList->setUniformRowHeights(true);
   ui->pktList->setAlternatingRowColors(true);
-  for (int i = 0; i < pktModel->columnCount(); i++) {
+  ui->pktList->setModel(pktListModel);
+  for (int i = 0; i < pktListModel->columnCount(); i++) {
     ui->pktList->resizeColumnToContents(i);
   }
 
   // proto tree view
   ui->protoTree->setEditTriggers(QAbstractItemView::NoEditTriggers);
   ui->protoTree->setHeaderHidden(true);
-  QStandardItemModel *model = generateProtoTreeModel(g_pkts[0]);
-  ui->protoTree->setModel(model);
-  QModelIndex rootIndex =
-      model->index(0, 0, model->invisibleRootItem()->index());
-  ui->protoTree->setRootIndex(rootIndex);
+  protoTreeModel->setProtoTree(g_protoTrees[0]);
+  ui->protoTree->setModel(protoTreeModel);
   ui->protoTree->expandAll();
 
   // select row 1 in packet list by default
-  QModelIndex selectIndex = pktModel->index(0, 0);
+  QModelIndex selectIndex = pktListModel->index(0, 0);
   ui->pktList->selectionModel()->select(
       selectIndex, QItemSelectionModel::Select | QItemSelectionModel::Rows);
   ui->byteView->setPacket(g_pkts[0]);
@@ -181,11 +122,7 @@ void MainWindow::handlePktListSelectionChanged(
   if (!selected.indexes().isEmpty()) {
     QModelIndex index = selected.indexes().first();
     int row = index.row();
-    QStandardItemModel *model = generateProtoTreeModel(g_pkts[row]);
-    ui->protoTree->setModel(model);
-    QModelIndex rootIndex =
-        model->index(0, 0, model->invisibleRootItem()->index());
-    ui->protoTree->setRootIndex(rootIndex);
+    protoTreeModel->setProtoTree(g_protoTrees[row]);
     ui->protoTree->expandAll();
 
     ui->byteView->setPacket(g_pkts[row]);
@@ -205,7 +142,9 @@ void MainWindow::handlePktListSelectionChanged(
 // }
 
 void MainWindow::handleProtoTreeClicked(const QModelIndex &index) {
-  QSize sz = ui->protoTree->model()->data(index, Qt::UserRole + 1).toSize();
-  //  qDebug() << sz;
-  ui->byteView->setRange(sz.width(), sz.height());
+  ProtoTree *tree = static_cast<ProtoTree *>(index.internalPointer());
+  if (tree && tree->field) {
+    //    qDebug() << tree->field->beginOff << tree->field->endOff;
+    ui->byteView->setRange(tree->field->pos, tree->field->length);
+  }
 }

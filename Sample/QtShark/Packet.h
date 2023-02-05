@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 std::string ip_to_string(uint32_t ip);
 std::string port_to_string(uint16_t port);
@@ -26,15 +27,36 @@ struct Packet {
 
 struct ProtoField {
   std::string key, value;
-  size_t beginOff, endOff;
+  size_t pos, length;
 };
 
 struct ProtoTree {
-  ProtoTree(ProtoField *field = nullptr) { this->field = field; }
+  ProtoTree(ProtoField *field = nullptr, ProtoTree* parent = nullptr) :
+  parent(parent), field(field) {}
   ~ProtoTree();
 
   void addChild(ProtoTree *child);
 
+  ProtoTree* child(int row) {
+      if(row<0 || row>= childs.size())
+          return nullptr;
+      return childs.at(row);
+  }
+  int childCount() const {
+      return childs.size();
+  }
+  int columnCount() const {return 1;}
+  int row() const {
+      if(parent) {
+        std::vector<ProtoTree*>::iterator itor = std::find(parent->childs.begin(),
+        parent->childs.end(), this);
+        if(itor != parent->childs.end())
+            return std::distance(parent->childs.begin(), itor);
+      }
+      return 0;
+  }
+
+  ProtoTree* parent;
   std::vector<ProtoTree *> childs;
   ProtoField *field;
 };

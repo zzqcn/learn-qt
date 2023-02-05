@@ -6,6 +6,8 @@
 #include <QStandardItemModel>
 
 #include "Packet.h"
+#include "PacketListModel.h"
+#include "ProtoTreeModel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,7 +23,7 @@ public:
   ~MainWindow();
 
 private:
-  QStandardItemModel *generateProtoTreeModel(const Packet *pkt);
+//  QStandardItemModel *generateProtoTreeModel(const Packet *pkt);
 
 private slots:
   void handlePktListSelectionChanged(const QItemSelection &selected,
@@ -32,5 +34,7 @@ private slots:
 
 private:
   Ui::MainWindow *ui;
+  PacketListModel* pktListModel;
+  ProtoTreeModel* protoTreeModel;
 };
 #endif // MAINWINDOW_H

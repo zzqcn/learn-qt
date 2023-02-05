@@ -12,7 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
-# 不把当前目录加入头文件目录, 在macOS上提升控件, 生成的代码会报错
 include_directories(.)
 
 set(PROJECT_SOURCES
@@ -20,6 +19,8 @@ set(PROJECT_SOURCES
     main.cpp
     MainWindow.cpp
     Packet.cpp
+    PacketListModel.cpp
+    ProtoTreeModel.cpp
     QHexView.cpp
     MainWindow.ui
 )

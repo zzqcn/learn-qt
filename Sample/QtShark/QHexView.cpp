@@ -12,11 +12,10 @@
 
 #include <stdexcept>
 
-const int MIN_HEXCHARS_IN_LINE = 47; // 16*3-1
-// const int GAP_ADR_HEX = 10;
+const int MIN_HEXCHARS_IN_LINE = 47;
 const int GAP_HEX_ASCII = 16;
 const int MIN_BYTES_PER_LINE = 16;
-const int ADR_LENGTH = 4; // 10;
+const int ADR_LENGTH = 4;
 
 QHexView::QHexView(QWidget *parent)
     : QAbstractScrollArea(parent), m_pdata(NULL) {
@@ -35,9 +34,8 @@ QHexView::QHexView(QWidget *parent)
   m_charHeight = fontMetrics().height();
 
   m_posAddr = 0;
-  m_posHex = (ADR_LENGTH + 2) * m_charWidth; // + GAP_ADR_HEX;
-  m_posAscii =
-      m_posHex + (MIN_HEXCHARS_IN_LINE + 2) * m_charWidth; // + GAP_HEX_ASCII;
+  m_posHex = (ADR_LENGTH + 2) * m_charWidth;
+  m_posAscii = m_posHex + (MIN_HEXCHARS_IN_LINE + 2) * m_charWidth;
   m_bytesPerLine = MIN_BYTES_PER_LINE;
 
   setMinimumWidth(m_posAscii + (MIN_BYTES_PER_LINE + 4) * m_charWidth);
@@ -184,10 +182,13 @@ void QHexView::paintEvent(QPaintEvent *event) {
           (data.at((lineIdx - firstLineIdx) * m_bytesPerLine + i) & 0xF), 16);
       painter.drawText(xPos + m_charWidth, yPos, val);
 
-      if ((pos + 2) > m_selectBegin && (pos + 2) < m_selectEnd) {
+      if ((xPos + 2 * m_charWidth) < (linePos - m_charWidth) &&
+          (pos + 2) > m_selectBegin && (pos + 2) < m_selectEnd) {
         painter.setBackground(selected);
         painter.setBackgroundMode(Qt::OpaqueMode);
-        // qDebug() << "pos " << pos << QTime::currentTime().toString();
+        //        qDebug() << data.size() << m_selectBegin << m_selectEnd << pos
+        //        + 2
+        //                 << QTime::currentTime().toString();
         painter.drawText(xPos + m_charWidth * 2, yPos, " ");
       }
 

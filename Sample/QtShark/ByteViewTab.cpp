@@ -133,7 +133,7 @@ void ByteViewTab::setPacket(Packet *pkt) {
   setCurrentIndex(0);
 }
 
-void ByteViewTab::setRange(int begin, int end) {
+void ByteViewTab::setRange(size_t pos, size_t length) {
   QHexView *hexView = dynamic_cast<QHexView *>(currentWidget());
-  hexView->setSelected(begin, end - begin + 1);
+  hexView->setSelected(pos, length);
 }
